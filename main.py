@@ -4,7 +4,7 @@ rwheel = 10
 error = 0
 # which line are we following:
 line = -1 # 0 is left, 1 is right
-maxturnspeed = 60
+maxturnspeed = 100
 
 # set starting speed
 CutebotPro.pwm_cruise_control(lwheel, rwheel)
@@ -43,17 +43,17 @@ def on_forever():
         CutebotPro.color_light(CutebotProRGBLight.RGBL, 0xff0000)
         CutebotPro.color_light(CutebotProRGBLight.RGBR, 0xff0000)
     # if detects a big line
-    if abs(error) < 40:
-        if error > 0: # robot is to the left of intersection (make a big left turn)
-            error = 3000/error
-            turn_left()
-            basic.pause(10)
-            #yellow light
-            CutebotPro.color_light(CutebotProRGBLight.RGBL, 0xffff00)
-        elif error < 0: # robot is to the right of intersection (make a big right turn)
+    if abs(error) < 100:
+        if error > 0: # robot is to the left of intersection (make a big right turn)
             error = 3000/error
             turn_right()
-            basic.pause(10)
+            basic.pause(100)
+            #yellow light
+            CutebotPro.color_light(CutebotProRGBLight.RGBL, 0xffff00)
+        elif error < 0: # robot is to the right of intersection (make a big left turn)
+            error = 3000/error
+            turn_left()
+            basic.pause(100)
             #yellow light
             CutebotPro.color_light(CutebotProRGBLight.RGBR, 0xffff00)
     # too far left

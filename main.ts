@@ -5,7 +5,7 @@ let error = 0
 //  which line are we following:
 let line = -1
 //  0 is left, 1 is right
-let maxturnspeed = 60
+let maxturnspeed = 100
 //  set starting speed
 CutebotPro.pwmCruiseControl(lwheel, rwheel)
 basic.pause(50)
@@ -43,19 +43,19 @@ basic.forever(function on_forever() {
     }
     
     //  if detects a big line
-    if (Math.abs(error) < 40) {
+    if (Math.abs(error) < 100) {
         if (error > 0) {
-            //  robot is to the left of intersection (make a big left turn)
+            //  robot is to the left of intersection (make a big right turn)
             error = 3000 / error
-            turn_left()
-            basic.pause(10)
+            turn_right()
+            basic.pause(100)
             // yellow light
             CutebotPro.colorLight(CutebotProRGBLight.RGBL, 0xffff00)
         } else if (error < 0) {
-            //  robot is to the right of intersection (make a big right turn)
+            //  robot is to the right of intersection (make a big left turn)
             error = 3000 / error
-            turn_right()
-            basic.pause(10)
+            turn_left()
+            basic.pause(100)
             // yellow light
             CutebotPro.colorLight(CutebotProRGBLight.RGBR, 0xffff00)
         }
