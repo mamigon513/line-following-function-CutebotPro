@@ -8,67 +8,29 @@ let line = -1
 //  set starting speed
 CutebotPro.pwmCruiseControl(lwheel, rwheel)
 basic.pause(50)
+function turn_right() {
+    
+    lwheel = lwheel + Math.abs(error) / 3000 * 50
+    rwheel = rwheel - Math.abs(error) / 3000 * 50
+    //  Set the change
+    CutebotPro.pwmCruiseControl(lwheel, rwheel)
+    // delay 0.05 sec        b
+    basic.pause(5)
+}
+
+function turn_left() {
+    
+    lwheel = lwheel - Math.abs(error) / 3000 * 50
+    rwheel = rwheel + Math.abs(error) / 3000 * 50
+    //  Set the change
+    CutebotPro.pwmCruiseControl(lwheel, rwheel)
+    // delay 0.05 sec
+    basic.pause(5)
+}
+
 basic.forever(function on_forever() {
-    control.inBackground(function on_in_background() {
-        let lwheel: number;
-        let rwheel: number;
-        //  check if we are at intersection (tracking states 4,5,6,7,10,15)
-        if (CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_4) || CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_5) || CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_6) || CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_7) || CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_10) || CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_15)) {
-            //  left line (go right instead)
-            if (line == 0) {
-                lwheel = lwheel + error / 3000 * 50
-                rwheel = 0
-                basic.showLeds(`
-            # # . . .
-            # # . . .
-            # # . . .
-            # # . . .
-            # # . . .
-            `)
-            } else if (line == 1) {
-                //  right line (go left instead)
-                rwheel = rwheel + error / 3000 * -50
-                lwheel = 0
-                basic.showLeds(`
-            . . . # #
-            . . . # #
-            . . . # #
-            . . . # #
-            . . . # #
-            `)
-            } else if (line == -1) {
-                basic.showLeds(`
-            # # # # #
-            # # # # #
-            . . . . .
-            . . . . .
-            . . . . .
-            `)
-            }
-            
-            //  Set the change
-            CutebotPro.pwmCruiseControl(lwheel, rwheel)
-            //  turn on headlights to indicate (blue)
-            CutebotPro.colorLight(CutebotProRGBLight.RGBL, 0x00ffff)
-            CutebotPro.colorLight(CutebotProRGBLight.RGBR, 0x00ffff)
-            basic.pause(100)
-            //  reset speed and headlights
-            CutebotPro.turnOffAllHeadlights()
-            lwheel = 10
-            rwheel = 10
-        }
-        
-    })
+    let magnet: number;
     
-    //  check which line we are following:
-    if (CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_13) || CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_14) || CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_12)) {
-        line = 1
-    } else if (CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_9) || CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_11) || CutebotPro.getGrayscaleSensorState(TrackbitStateType.Tracking_State_8)) {
-        //  right side (tracking states 12,13,14)
-        line = 0
-    }
-    
-    //  left side (tracking states 8,9,11)
     //  get the line offset
     error = CutebotPro.getOffset()
     //  if detects no line
@@ -80,26 +42,55 @@ basic.forever(function on_forever() {
         CutebotPro.colorLight(CutebotProRGBLight.RGBR, 0xff0000)
     }
     
+    //  if detects a big line
+    if (error == 0) {
+        magnet = input.magneticForce(Dimension.X)
+        if (Math.abs(magnet) > 0) {
+            //  magnet detected
+            error = 3000
+            turn_left()
+            //  turn on left headlight (green)
+            CutebotPro.colorLight(CutebotProRGBLight.RGBL, 0x00ff00)
+            basic.pause(100)
+            // magnet got further away
+            if (Math.abs(magnet) > input.magneticForce(Dimension.X)) {
+                error = 3000
+                turn_right()
+                //  turn on right headlight (green)
+                CutebotPro.colorLight(CutebotProRGBLight.RGBR, 0x00ff00)
+                basic.pause(500)
+            }
+            
+        } else if (magnet == 0) {
+            if (line == 1) {
+                //  line is to the left
+                turn_right()
+                basic.pause(100)
+                CutebotPro.colorLight(CutebotProRGBLight.RGBR, 0x00ff00)
+            }
+            
+        }
+        
+    }
+    
     //  too far left
     if (error > 0) {
-        // lasterr = error
-        lwheel = lwheel + error / 3000 * 50
+        turn_right()
+        line = 1
+        //  line is to the right
         //  turn on left headlight (red)
         CutebotPro.colorLight(CutebotProRGBLight.RGBL, 0xff0000)
     }
     
     //  too far right
     if (error < 0) {
-        rwheel = rwheel + error / 3000 * -50
-        lwheel = 0
+        turn_left()
+        line = 0
+        //  line is to the left
         // turn on right headlight (red)
         CutebotPro.colorLight(CutebotProRGBLight.RGBR, 0xff0000)
     }
     
-    //  Set the change     
-    CutebotPro.pwmCruiseControl(lwheel, rwheel)
-    // delay 0.02 sec
-    basic.pause(5)
     //  reset speed and headlights
     CutebotPro.turnOffAllHeadlights()
     lwheel = 10
