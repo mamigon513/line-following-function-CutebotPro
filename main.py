@@ -4,27 +4,28 @@ rwheel = 10
 error = 0
 # which line are we following:
 line = -1 # 0 is left, 1 is right
+maxturnspeed = 60
 
 # set starting speed
 CutebotPro.pwm_cruise_control(lwheel, rwheel)
 basic.pause(50)
 
 def turn_right():
-    global lwheel, rwheel
-    lwheel = lwheel + (abs(error)/3000)*50
-    rwheel = rwheel - (abs(error)/3000)*50
-    # Set the change
-    CutebotPro.pwm_cruise_control(lwheel, rwheel)
-    #delay 0.05 sec        b
-    basic.pause(5)
-def turn_left():
-    global lwheel, rwheel
-    lwheel = lwheel - (abs(error)/3000)*50
-    rwheel = rwheel + (abs(error)/3000)*50
+    global lwheel, rwheel, maxturnspeed
+    lwheel = lwheel + (abs(error)/3000)*maxturnspeed
+    rwheel = rwheel - (abs(error)/3000)*maxturnspeed
     # Set the change
     CutebotPro.pwm_cruise_control(lwheel, rwheel)
     #delay 0.05 sec
-    basic.pause(5)
+    basic.pause(10)
+def turn_left():
+    global lwheel, rwheel, maxturnspeed
+    lwheel = lwheel - (abs(error)/3000)*maxturnspeed
+    rwheel = rwheel + (abs(error)/3000)*maxturnspeed
+    # Set the change
+    CutebotPro.pwm_cruise_control(lwheel, rwheel)
+    #delay 0.05 sec
+    basic.pause(10)
 
 def on_forever():
 
@@ -42,27 +43,19 @@ def on_forever():
         CutebotPro.color_light(CutebotProRGBLight.RGBL, 0xff0000)
         CutebotPro.color_light(CutebotProRGBLight.RGBR, 0xff0000)
     # if detects a big line
-    if error == 0:
-        magnet = input.magnetic_force(Dimension.X)
-        if abs(magnet) > 0: # magnet detected
-            error = 3000
+    if abs(error) < 40:
+        if error > 0: # robot is to the left of intersection (make a big left turn)
+            error = 3000/error
             turn_left()
-            # turn on left headlight (green)
-            CutebotPro.color_light(CutebotProRGBLight.RGBL, 0x00ff00)
-            basic.pause(100)
-
-            #magnet got further away
-            if abs(magnet) > input.magnetic_force(Dimension.X):
-                error = 3000
-                turn_right()
-                # turn on right headlight (green)
-                CutebotPro.color_light(CutebotProRGBLight.RGBR, 0x00ff00)
-                basic.pause(500)
-        elif magnet == 0:
-            if line == 1: # line is to the left
-                turn_right()
-                basic.pause(100)
-                CutebotPro.color_light(CutebotProRGBLight.RGBR, 0x00ff00)
+            basic.pause(10)
+            #yellow light
+            CutebotPro.color_light(CutebotProRGBLight.RGBL, 0xffff00)
+        elif error < 0: # robot is to the right of intersection (make a big right turn)
+            error = 3000/error
+            turn_right()
+            basic.pause(10)
+            #yellow light
+            CutebotPro.color_light(CutebotProRGBLight.RGBR, 0xffff00)
     # too far left
     if error > 0:
         turn_right()

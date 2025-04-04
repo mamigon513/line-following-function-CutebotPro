@@ -5,31 +5,31 @@ let error = 0
 //  which line are we following:
 let line = -1
 //  0 is left, 1 is right
+let maxturnspeed = 60
 //  set starting speed
 CutebotPro.pwmCruiseControl(lwheel, rwheel)
 basic.pause(50)
 function turn_right() {
     
-    lwheel = lwheel + Math.abs(error) / 3000 * 50
-    rwheel = rwheel - Math.abs(error) / 3000 * 50
+    lwheel = lwheel + Math.abs(error) / 3000 * maxturnspeed
+    rwheel = rwheel - Math.abs(error) / 3000 * maxturnspeed
     //  Set the change
     CutebotPro.pwmCruiseControl(lwheel, rwheel)
-    // delay 0.05 sec        b
-    basic.pause(5)
+    // delay 0.05 sec
+    basic.pause(10)
 }
 
 function turn_left() {
     
-    lwheel = lwheel - Math.abs(error) / 3000 * 50
-    rwheel = rwheel + Math.abs(error) / 3000 * 50
+    lwheel = lwheel - Math.abs(error) / 3000 * maxturnspeed
+    rwheel = rwheel + Math.abs(error) / 3000 * maxturnspeed
     //  Set the change
     CutebotPro.pwmCruiseControl(lwheel, rwheel)
     // delay 0.05 sec
-    basic.pause(5)
+    basic.pause(10)
 }
 
 basic.forever(function on_forever() {
-    let magnet: number;
     
     //  get the line offset
     error = CutebotPro.getOffset()
@@ -43,32 +43,21 @@ basic.forever(function on_forever() {
     }
     
     //  if detects a big line
-    if (error == 0) {
-        magnet = input.magneticForce(Dimension.X)
-        if (Math.abs(magnet) > 0) {
-            //  magnet detected
-            error = 3000
+    if (Math.abs(error) < 40) {
+        if (error > 0) {
+            //  robot is to the left of intersection (make a big left turn)
+            error = 3000 / error
             turn_left()
-            //  turn on left headlight (green)
-            CutebotPro.colorLight(CutebotProRGBLight.RGBL, 0x00ff00)
-            basic.pause(100)
-            // magnet got further away
-            if (Math.abs(magnet) > input.magneticForce(Dimension.X)) {
-                error = 3000
-                turn_right()
-                //  turn on right headlight (green)
-                CutebotPro.colorLight(CutebotProRGBLight.RGBR, 0x00ff00)
-                basic.pause(500)
-            }
-            
-        } else if (magnet == 0) {
-            if (line == 1) {
-                //  line is to the left
-                turn_right()
-                basic.pause(100)
-                CutebotPro.colorLight(CutebotProRGBLight.RGBR, 0x00ff00)
-            }
-            
+            basic.pause(10)
+            // yellow light
+            CutebotPro.colorLight(CutebotProRGBLight.RGBL, 0xffff00)
+        } else if (error < 0) {
+            //  robot is to the right of intersection (make a big right turn)
+            error = 3000 / error
+            turn_right()
+            basic.pause(10)
+            // yellow light
+            CutebotPro.colorLight(CutebotProRGBLight.RGBR, 0xffff00)
         }
         
     }
