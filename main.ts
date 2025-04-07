@@ -5,7 +5,9 @@ let error = 0
 //  which line are we following:
 let line = -1
 //  0 is left, 1 is right
-let maxturnspeed = 100
+let maxturnspeed = 50
+// magnet present
+let mag = 0
 //  set starting speed
 CutebotPro.pwmCruiseControl(lwheel, rwheel)
 basic.pause(50)
@@ -15,7 +17,7 @@ function turn_right() {
     rwheel = rwheel - Math.abs(error) / 3000 * maxturnspeed
     //  Set the change
     CutebotPro.pwmCruiseControl(lwheel, rwheel)
-    // delay 0.05 sec
+    // delay 0.01 sec
     basic.pause(10)
 }
 
@@ -25,14 +27,17 @@ function turn_left() {
     rwheel = rwheel + Math.abs(error) / 3000 * maxturnspeed
     //  Set the change
     CutebotPro.pwmCruiseControl(lwheel, rwheel)
-    // delay 0.05 sec
+    // delay 0.01 sec
     basic.pause(10)
 }
 
-basic.forever(function on_forever() {
+
+function follow_line() {
     
     //  get the line offset
     error = CutebotPro.getOffset()
+    //  make the left side of line the center
+    error = error + 1000
     //  if detects no line
     if (Math.abs(error) == 3000) {
         lwheel = 0
@@ -42,7 +47,8 @@ basic.forever(function on_forever() {
         CutebotPro.colorLight(CutebotProRGBLight.RGBR, 0xff0000)
     }
     
-    //  if detects a big line
+    // ### Intersection ####
+    //  if detects a big line (error is less than 100)
     if (Math.abs(error) < 100) {
         if (error > 0) {
             //  robot is to the left of intersection (make a big right turn)
@@ -86,4 +92,14 @@ basic.forever(function on_forever() {
     rwheel = 10
     CutebotPro.pwmCruiseControl(lwheel, rwheel)
     basic.pause(5)
-})
+    magnet()
+}
+
+//  Run line follow till magnet detected then stop
+while (mag == 0) {
+    follow_line()
+}
+//  stop robot
+CutebotPro.pwmCruiseControl(0, 0)
+basic.pause(100)
+CutebotPro.turnOffAllHeadlights()
