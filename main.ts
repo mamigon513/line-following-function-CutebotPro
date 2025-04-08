@@ -14,7 +14,7 @@ CutebotPro.pwmCruiseControl(10, 10)
 basic.pause(50)
 function turn_right(left: number, right: number, err: number) {
     left = left + Math.abs(err) / 3000 * maxturnspeed
-    right = right - Math.abs(err) / 3000 * maxturnspeed
+    right = right + Math.abs(err) / -3000 * maxturnspeed
     //  Set the change
     CutebotPro.pwmCruiseControl(left, right)
     // delay 0.01 sec
@@ -22,7 +22,7 @@ function turn_right(left: number, right: number, err: number) {
 }
 
 function turn_left(left: number, right: number, err: number) {
-    left = left - Math.abs(err) / 3000 * maxturnspeed
+    left = left + Math.abs(err) / -3000 * maxturnspeed
     right = right + Math.abs(err) / 3000 * maxturnspeed
     //  Set the change
     CutebotPro.pwmCruiseControl(left, right)
@@ -50,7 +50,7 @@ function follow_line() {
     let error = CutebotPro.getOffset() + 1000
     //  make the left side of line the center
     //  if detects no line (both red)
-    if (Math.abs(error) == 3000) {
+    if (Math.abs(error) > 2000) {
         lwheel = 0
         rwheel = 0
         // turn on both headlights (red)

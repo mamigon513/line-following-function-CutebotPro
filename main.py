@@ -18,13 +18,13 @@ basic.pause(50)
 
 def turn_right(left, right, err):
     left = left + (abs(err)/3000)*maxturnspeed
-    right = right - (abs(err)/3000)*maxturnspeed
+    right = right + (abs(err)/-3000)*maxturnspeed
     # Set the change
     CutebotPro.pwm_cruise_control(left, right)
     #delay 0.01 sec
     basic.pause(10)
 def turn_left(left, right, err):
-    left = left - (abs(err)/3000)*maxturnspeed
+    left = left + (abs(err)/-3000)*maxturnspeed
     right = right + (abs(err)/3000)*maxturnspeed
     # Set the change
     CutebotPro.pwm_cruise_control(left, right)
@@ -47,7 +47,7 @@ def follow_line():
     # get the line offset
     error = CutebotPro.get_offset() +1000 # make the left side of line the center
     # if detects no line (both red)
-    if abs(error) == 3000:
+    if abs(error) > 2000:
         lwheel = 0
         rwheel = 0
         #turn on both headlights (red)
